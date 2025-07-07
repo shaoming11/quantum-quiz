@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quantum Information Flashcards</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #333;
+        }
+
+        .container {
+            max-width: 900px;
+            width: 95%;
+            text-align: center;
+        }
+
+        .header {
+            color: white;
+            margin-bottom: 2rem;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .progress {
+            background: rgba(255,255,255,0.2);
+            border-radius: 10px;
+            padding: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .progress-bar {
+            background: linear-gradient(90deg, #00d4aa, #00b894);
+            height: 8px;
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        .progress-text {
+            color: white;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+
+        .topic-selector {
+            margin-bottom: 2rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            justify-content: center;
+        }
+
+        .topic-btn {
+            background: rgba(255,255,255,0.15);
+            border: 2px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 0.6rem 1.2rem;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.85rem;
+            min-width: 120px;
+        }
+
+        .topic-btn:hover {
+            background: rgba(255,255,255,0.25);
+            transform: translateY(-2px);
+        }
+
+        .topic-btn.active {
+            background: white;
+            color: #667eea;
+            border-color: white;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .flashcard-container {
+            perspective: 1000px;
+            margin-bottom: 2rem;
+        }
+
+        .flashcard {
+            width: 100%;
+            height: 450px;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s;
+            cursor: pointer;
+        }
+
+        .flashcard.flipped {
+            transform: rotateY(180deg);
+        }
+
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            background: white;
+        }
+
+        .card-back {
+            transform: rotateY(180deg);
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+
+        .card-content {
+            text-align: center;
+            max-width: 100%;
+            overflow-y: auto;
+            max-height: 100%;
+        }
+
+        .card-front .card-content h3 {
+            font-size: 1.6rem;
+            color: #333;
+            line-height: 1.4;
+        }
+
+        .card-back .card-content {
+            font-size: 1.05rem;
+            line-height: 1.6;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #f8f9fa;
+            color: #333;
+        }
+
+        .shuffle-btn {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            color: #333;
+        }
+
+        .card-indicator {
+            color: rgba(255,255,255,0.9);
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+
+        .topic-info {
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            color: white;
+        }
+
+        .topic-info h3 {
+            margin-bottom: 0.5rem;
+            font-size: 1.1rem;
+        }
+
+        .topic-info p {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .empty-state {
+            color: white;
+            text-align: center;
+            padding: 2rem;
+            font-size: 1.1rem;
+            opacity: 0.8;
+        }
+
+        @media (max-width: 768px) {
+            .flashcard {
+                height: 400px;
+            }
+            
+            .card-face {
+                padding: 1.5rem;
+            }
+            
+            .card-front .card-content h3 {
+                font-size: 1.3rem;
+            }
+            
+            .card-back .card-content {
+                font-size: 0.95rem;
+            }
+            
+            .topic-selector {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .topic-btn {
+                width: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Quantum Information Flashcards</h1>
+            <div class="progress">
+                <div class="progress-bar" id="progressBar"></div>
+                <div class="progress-text" id="progressText"></div>
+            </div>
+        </div>
+
+        <div class="topic-selector">
+            <button class="topic-btn active" data-topic="all">All Topics</button>
+            <button class="topic-btn" data-topic="single-classical">Single: Classical</button>
+            <button class="topic-btn" data-topic="single-quantum">Single: Quantum</button>
+            <button class="topic-btn" data-topic="multi-classical">Multi: Classical</button>
+            <button class="topic-btn" data-topic="multi-quantum">Multi: Quantum</button>
+            <button class="topic-btn" data-topic="circuits">Circuits</button>
+            <button class="topic-btn" data-topic="inner-products">Inner Products</button>
+            <button class="topic-btn" data-topic="limitations">Limitations</button>
+            <button class="topic-btn" data-topic="teleportation">Teleportation</button>
+            <button class="topic-btn" data-topic="superdense">Superdense</button>
+            <button class="topic-btn" data-topic="chsh">CHSH Game</button>
+            <button class="topic-btn" data-topic="pauli">Pauli Operations</button>
+            <button class="topic-btn" data-topic="thinking">Thinking/Applications</button>
+        </div>
+
+        <div class="topic-info" id="topicInfo">
+            <h3 id="topicTitle">All Topics</h3>
+            <p id="topicDescription">Complete collection of quantum information concepts</p>
+        </div>
+
+        <div class="flashcard-container" id="flashcardContainer">
+            <div class="flashcard" id="flashcard">
+                <div class="card-face card-front">
+                    <div class="card-content">
+                        <h3 id="question">Loading...</h3>
+                    </div>
+                </div>
+                <div class="card-face card-back">
+                    <div class="card-content">
+                        <div id="answer">Loading...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn btn-secondary" id="prevBtn">← Previous</button>
+            <button class="btn btn-primary" id="flipBtn">Flip Card</button>
+            <button class="btn btn-secondary" id="nextBtn">Next →</button>
+            <button class="btn shuffle-btn" id="shuffleBtn">🔀 Shuffle</button>
+        </div>
+
+        <div class="card-indicator" id="cardIndicator"></div>
+    </div>
+
+    <script>
+        const flashcards = [
+            // Single Systems: Classical Information
+            { topic: 'single-classical', question: 'What is a classical state?', answer: 'A configuration of a system that can be recognized and described unambiguously (e.g., 0 or 1 for a bit)' },
+            { topic: 'single-classical', question: 'What is a classical state set?', answer: 'Any finite and nonempty set of possible classical states a system can be in' },
+            { topic: 'single-classical', question: 'What is a probabilistic state?', answer: 'A representation of uncertain knowledge about a system\'s classical state using probabilities' },
+            { topic: 'single-classical', question: 'What are the two properties of a probability vector?', answer: '1. All entries are nonnegative real numbers<br>2. The sum of all entries equals 1' },
+            { topic: 'single-classical', question: 'What is a standard basis vector?', answer: 'A vector with 1 in one position and 0 in all others, representing certainty about a classical state' },
+            { topic: 'single-classical', question: 'What is a "ket" in Dirac notation?', answer: 'A column vector representation, written as |·⟩' },
+            { topic: 'single-classical', question: 'What is a "bra" in Dirac notation?', answer: 'A row vector representation, written as ⟨·|' },
+            { topic: 'single-classical', question: 'What does bra × ket produce?', answer: 'A scalar (inner product): ⟨ψ|φ⟩ = a complex number' },
+            { topic: 'single-classical', question: 'What does ket × bra produce?', answer: 'A matrix (outer product): |ψ⟩⟨φ| = a matrix' },
+            { topic: 'single-classical', question: 'What is a deterministic operation?', answer: 'An operation where the result is completely determined by the input without any randomness' },
+            { topic: 'single-classical', question: 'What is a stochastic matrix?', answer: 'A matrix representing probabilistic operations with:<br>1. All entries are nonnegative real numbers<br>2. Each column sums to 1' },
+            { topic: 'single-classical', question: 'What happens when you measure a probabilistic state?', answer: 'You observe one classical state, and the probability vector updates to the corresponding standard basis vector' },
+
+            // Single Systems: Quantum Information
+            { topic: 'single-quantum', question: 'What is a quantum state vector?', answer: 'A column vector representing a quantum state with complex number entries and Euclidean norm equal to 1' },
+            { topic: 'single-quantum', question: 'What are the two properties of a quantum state vector?', answer: '1. Entries are complex numbers<br>2. Sum of absolute values squared of entries equals 1' },
+            { topic: 'single-quantum', question: 'What is the Euclidean norm?', answer: 'For vector v: ||v|| = √(Σ|v<sub>i</sub>|²)' },
+            { topic: 'single-quantum', question: 'What is a qubit?', answer: 'A quantum system whose classical state set is {0, 1}' },
+            { topic: 'single-quantum', question: 'What is the plus state |+⟩?', answer: '(1/√2)(|0⟩ + |1⟩) = (1/√2)[1, 1]<sup>T</sup>' },
+            { topic: 'single-quantum', question: 'What is the minus state |−⟩?', answer: '(1/√2)(|0⟩ − |1⟩) = (1/√2)[1, −1]<sup>T</sup>' },
+            { topic: 'single-quantum', question: 'What is superposition in quantum states?', answer: 'A linear combination of standard basis states (synonymous with quantum superposition)' },
+            { topic: 'single-quantum', question: 'What is the Born rule?', answer: 'When measuring a quantum state, the probability of observing classical state i is |α<sub>i</sub>|²' },
+            { topic: 'single-quantum', question: 'Why do we take the complex conjugate in bra notation?', answer: 'To properly define inner products with complex vectors: ⟨ψ| = (ψ†) where † is conjugate transpose' },
+            { topic: 'single-quantum', question: 'What is a unitary matrix?', answer: 'A square matrix U where U†U = UU† = I (preserves vector norms)' },
+            { topic: 'single-quantum', question: 'What is the key property of unitary operations?', answer: 'They preserve the Euclidean norm: ||Uv|| = ||v|| for any vector v' },
+            { topic: 'single-quantum', question: 'What is the Hadamard operation matrix?', answer: 'H = (1/√2)[[1, 1], [1, −1]]' },
+            { topic: 'single-quantum', question: 'What does the Hadamard operation do to |0⟩?', answer: 'H|0⟩ = |+⟩ = (1/√2)(|0⟩ + |1⟩)' },
+            { topic: 'single-quantum', question: 'What does the Hadamard operation do to |1⟩?', answer: 'H|1⟩ = |−⟩ = (1/√2)(|0⟩ − |1⟩)' },
+            { topic: 'single-quantum', question: 'What is the Pauli X matrix?', answer: 'X = [[0, 1], [1, 0]] (bit flip/NOT operation)' },
+            { topic: 'single-quantum', question: 'What is the Pauli Z matrix?', answer: 'Z = [[1, 0], [0, −1]] (phase flip operation)' },
+            { topic: 'single-quantum', question: 'What does the X (bit flip) operation do?', answer: 'X|0⟩ = |1⟩ and X|1⟩ = |0⟩' },
+            { topic: 'single-quantum', question: 'What does the Z (phase flip) operation do?', answer: 'Z|0⟩ = |0⟩ and Z|1⟩ = −|1⟩' },
+
+            // Multiple Systems: Classical Information  
+            { topic: 'multi-classical', question: 'What is the Cartesian product of classical state sets?', answer: 'The set of all possible combinations of classical states from multiple systems, e.g., {0,1} × {0,1} = {00, 01, 10, 11}' },
+            { topic: 'multi-classical', question: 'What does independence mean for two classical systems?', answer: 'Learning the state of one system provides no information about the state of the other: P(a,b) = P(a)P(b)' },
+            { topic: 'multi-classical', question: 'What is a product state in classical information?', answer: 'A joint probabilistic state where systems are independent: |ψ⟩ = |ψ₁⟩ ⊗ |ψ₂⟩' },
+            { topic: 'multi-classical', question: 'What is the tensor product of two probability vectors?', answer: 'A vector where each entry is the product of corresponding entries: (v ⊗ w)[i,j] = v[i] × w[j]' },
+            { topic: 'multi-classical', question: 'What is bilinearity of the tensor product?', answer: 'Linear in each argument: (av₁ + bv₂) ⊗ w = a(v₁ ⊗ w) + b(v₂ ⊗ w)' },
+            { topic: 'multi-classical', question: 'What is a controlled-NOT operation?', answer: 'If control bit is 0, do nothing; if control bit is 1, flip the target bit' },
+            { topic: 'multi-classical', question: 'What happens when you measure only one system in a joint state?', answer: 'You get the marginal probability distribution and update the conditional state of the unmeasured system' },
+            { topic: 'multi-classical', question: 'What is the tensor product of stochastic matrices?', answer: 'The matrix representing independent operations on separate systems: (A ⊗ B)' },
+
+            // Multiple Systems: Quantum Information
+            { topic: 'multi-quantum', question: 'What is an entangled quantum state?', answer: 'A quantum state of multiple systems that cannot be written as a tensor product of individual system states' },
+            { topic: 'multi-quantum', question: 'What are the Bell states?', answer: 'Four maximally entangled two-qubit states: |Φ⁺⟩, |Φ⁻⟩, |Ψ⁺⟩, |Ψ⁻⟩' },
+            { topic: 'multi-quantum', question: 'What is |Φ⁺⟩ (the Bell state)?', answer: '(1/√2)(|00⟩ + |11⟩) - a maximally entangled state' },
+            { topic: 'multi-quantum', question: 'What is the GHZ state?', answer: '(1/√2)(|000⟩ + |111⟩) - a three-qubit entangled state' },
+            { topic: 'multi-quantum', question: 'What is the W state?', answer: '(1/√3)(|001⟩ + |010⟩ + |100⟩) - a three-qubit symmetric entangled state' },
+            { topic: 'multi-quantum', question: 'What happens when you measure one qubit in an entangled state?', answer: 'The joint state collapses, and the remaining qubits are left in a conditional state based on the measurement outcome' },
+            { topic: 'multi-quantum', question: 'What is the tensor product of quantum state vectors?', answer: 'A way to represent product states: |ψ⟩ ⊗ |φ⟩ has norm ||ψ|| × ||φ||' },
+            { topic: 'multi-quantum', question: 'What is a swap operation?', answer: 'A unitary operation that exchanges the quantum states of two systems: SWAP|ab⟩ = |ba⟩' },
+            { topic: 'multi-quantum', question: 'What is a controlled-unitary operation?', answer: 'Apply unitary U to target if control is |1⟩, otherwise do nothing' },
+            { topic: 'multi-quantum', question: 'What is a Toffoli gate?', answer: 'A controlled-controlled-NOT gate: flip target if both control qubits are |1⟩' },
+            { topic: 'multi-quantum', question: 'What is a Fredkin gate?', answer: 'A controlled-SWAP gate: swap two qubits if control is |1⟩' },
+
+            // Quantum Circuits
+            { topic: 'circuits', question: 'What is a quantum circuit?', answer: 'A model of quantum computation where qubits (wires) flow through quantum gates (operations) from left to right' },
+            { topic: 'circuits', question: 'What is the Qiskit qubit ordering convention?', answer: 'Top qubit has index 0 and corresponds to rightmost position; bottom qubit has highest index and leftmost position' },
+            { topic: 'circuits', question: 'How is a controlled-NOT gate represented in circuits?', answer: 'Solid circle (control) connected to ⊕ symbol (target) with a vertical line' },
+            { topic: 'circuits', question: 'How are single-qubit gates shown in circuit diagrams?', answer: 'As squares with letters indicating the operation (H for Hadamard, X for NOT, etc.)' },
+            { topic: 'circuits', question: 'How are measurement gates represented?', answer: 'As boxes with meter symbols that output classical bits' },
+            { topic: 'circuits', question: 'What does a swap gate look like in a circuit?', answer: 'Two crossed lines (×) connecting the qubits to be swapped' },
+            { topic: 'circuits', question: 'How are multi-qubit unitary operations shown?', answer: 'As rectangles spanning multiple qubits, labeled with the operation name' },
+            { topic: 'circuits', question: 'What do double lines represent in quantum circuits?', answer: 'Classical bits/wires that carry classical information' },
+            { topic: 'circuits', question: 'What is the composition rule for quantum circuits?', answer: 'Operations are applied left-to-right, and the overall operation is the matrix product U_n...U_2U_1' },
+
+            // Inner Products and Projections
+            { topic: 'inner-products', question: 'What is the inner product ⟨ψ|φ⟩?', answer: 'The sum Σᵢ ψᵢ* φᵢ where * denotes complex conjugate' },
+            { topic: 'inner-products', question: 'How is the Euclidean norm related to inner products?', answer: '||ψ|| = √⟨ψ|ψ⟩' },
+            { topic: 'inner-products', question: 'What is the conjugate symmetry property?', answer: '⟨ψ|φ⟩ = ⟨φ|ψ⟩* (complex conjugate)' },
+            { topic: 'inner-products', question: 'What is the Cauchy-Schwarz inequality?', answer: '|⟨ψ|φ⟩| ≤ ||ψ|| ||φ|| for any vectors ψ, φ' },
+            { topic: 'inner-products', question: 'When are two vectors orthogonal?', answer: 'When their inner product is zero: ⟨ψ|φ⟩ = 0' },
+            { topic: 'inner-products', question: 'What is an orthonormal set?', answer: 'A set of vectors where each pair is orthogonal and each vector has unit norm' },
+            { topic: 'inner-products', question: 'What is a projection matrix?', answer: 'A matrix P where P† = P (Hermitian) and P² = P (idempotent)' },
+            { topic: 'inner-products', question: 'What is a projective measurement?', answer: 'A measurement described by projection matrices {Pᵢ} where Σᵢ Pᵢ = I' },
+            { topic: 'inner-products', question: 'What happens when you perform a projective measurement?', answer: 'Outcome i occurs with probability ⟨ψ|Pᵢ|ψ⟩, and the state becomes Pᵢ|ψ⟩/√⟨ψ|Pᵢ|ψ⟩' },
+            { topic: 'inner-products', question: 'How can projective measurements be implemented?', answer: 'Using unitary operations, standard basis measurements, and workspace qubits' },
+
+            // Limitations on Quantum Information
+            { topic: 'limitations', question: 'What is a global phase?', answer: 'A complex number e^(iθ) that multiplies all entries of a quantum state vector equally' },
+            { topic: 'limitations', question: 'Why are global phases irrelevant?', answer: 'States differing by global phase give identical measurement probabilities and behave identically under unitary operations' },
+            { topic: 'limitations', question: 'What is the no-cloning theorem?', answer: 'It is impossible to create a perfect copy of an unknown quantum state using any physical process' },
+            { topic: 'limitations', question: 'Why is quantum cloning impossible?', answer: 'The cloning operation would need to be linear in the state being cloned, but perfect cloning is inherently nonlinear' },
+            { topic: 'limitations', question: 'Can you clone known quantum states?', answer: 'Yes, you can clone any known state (like |0⟩ or |1⟩) using appropriate circuits, but not unknown arbitrary states' },
+            { topic: 'limitations', question: 'What is the relationship between orthogonality and distinguishability?', answer: 'Non-orthogonal quantum states cannot be perfectly distinguished; only orthogonal states can be perfectly distinguished' },
+            { topic: 'limitations', question: 'Why can\'t non-orthogonal states be perfectly distinguished?', answer: 'Perfect discrimination would require a measurement that gives different outcomes with certainty, which is impossible for non-orthogonal states' },
+
+            // Quantum Teleportation
+            { topic: 'teleportation', question: 'What is quantum teleportation?', answer: 'A protocol where Alice transmits a qubit to Bob using 1 e-bit of entanglement + 2 classical bits' },
+            { topic: 'teleportation', question: 'What are the resources needed for teleportation?', answer: 'Shared entangled state (e-bit) + 2 classical bits of communication' },
+            { topic: 'teleportation', question: 'What does Alice do in teleportation?', answer: '1. CNOT with unknown qubit as control, her e-bit as target<br>2. Hadamard on unknown qubit<br>3. Measure both qubits, send results to Bob' },
+            { topic: 'teleportation', question: 'What does Bob do in teleportation?', answer: 'Apply corrections based on Alice\'s classical bits: X if first bit is 1, Z if second bit is 1' },
+            { topic: 'teleportation', question: 'Why doesn\'t teleportation violate no-cloning?', answer: 'The original qubit is destroyed (measured), so no copy exists - the state is moved, not copied' },
+            { topic: 'teleportation', question: 'What is the success probability of teleportation?', answer: '100% - it always works perfectly when performed correctly' },
+            { topic: 'teleportation', question: 'Can you teleport an entangled qubit?', answer: 'Yes, teleportation preserves all entanglement relationships with other systems' },
+            { topic: 'teleportation', question: 'Why can\'t you send qubits with classical communication alone?', answer: 'Classical communication can be copied/broadcast, which would violate the no-cloning theorem' },
+
+            // Superdense Coding
+            { topic: 'superdense', question: 'What is superdense coding?', answer: 'A protocol where Alice sends 2 classical bits to Bob using 1 qubit + 1 shared e-bit' },
+            { topic: 'superdense', question: 'What are the resources needed for superdense coding?', answer: 'Shared entangled state (e-bit) + 1 qubit of communication' },
+            { topic: 'superdense', question: 'What does Alice do in superdense coding?', answer: 'Apply I, X, Z, or XZ to her qubit based on the 2 classical bits she wants to send, then send the qubit to Bob' },
+            { topic: 'superdense', question: 'What does Bob do in superdense coding?', answer: 'Perform CNOT (Alice\'s qubit as control, his as target), then Hadamard on Alice\'s qubit, then measure both qubits' },
+            { topic: 'superdense', question: 'How does superdense coding work?', answer: 'Alice chooses which Bell state to create by operating on her qubit, Bob measures to determine which Bell state was chosen' },
+            { topic: 'superdense', question: 'What is the significance of superdense coding?', answer: 'Shows that shared entanglement can double the classical information capacity of quantum communication' },
+            { topic: 'superdense', question: 'What is Holevo\'s theorem (simplified)?', answer: 'Without shared entanglement, you cannot communicate more than 1 classical bit by sending 1 qubit' },
+
+            // CHSH Game
+            { topic: 'chsh', question: 'What is the CHSH game?', answer: 'A nonlocal game where Alice and Bob try to correlate their answers to random questions without communication' },
+            { topic: 'chsh', question: 'What are the rules of the CHSH game?', answer: 'Alice and Bob each get a random bit (x,y), provide answers (a,b), and win if a⊕b = x∧y' },
+            { topic: 'chsh', question: 'What is the classical winning probability for CHSH?', answer: '75% (3/4) - no classical strategy can do better' },
+            { topic: 'chsh', question: 'What is the quantum winning probability for CHSH?', answer: 'cos²(π/8) ≈ 85.4% using shared entanglement' },
+            { topic: 'chsh', question: 'What quantum strategy achieves optimal CHSH performance?', answer: 'Alice and Bob share |Φ⁺⟩, apply rotations based on questions, then measure' },
+            { topic: 'chsh', question: 'What is Tsirelson\'s inequality?', answer: 'The quantum winning probability for CHSH is bounded by cos²(π/8) ≈ 85.4% - no quantum strategy can do better' },
+            { topic: 'chsh', question: 'What is a Bell test?', answer: 'An experiment like CHSH that demonstrates quantum entanglement violates classical local realism' },
+            { topic: 'chsh', question: 'What is the significance of the CHSH game?', answer: 'Provides concrete, testable evidence for quantum entanglement and violation of local hidden variable theories' },
+            { topic: 'chsh', question: 'What is Bell\'s theorem?', answer: 'Quantum mechanics is incompatible with local hidden variable theories - demonstrated by games like CHSH' },
+            { topic: 'chsh', question: 'Why did Clauser, Aspect, and Zeilinger win the 2022 Nobel Prize?', answer: 'For experimental demonstrations of Bell tests showing quantum entanglement violates local realism' },
+
+            // Pauli Operations
+            { topic: 'pauli', question: 'What is the Pauli I matrix?', answer: 'I = [[1, 0], [0, 1]] (identity operation)' },
+            { topic: 'pauli', question: 'What is the Pauli X matrix?', answer: 'X = [[0, 1], [1, 0]] (bit flip/NOT operation)' },
+            { topic: 'pauli', question: 'What is the Pauli Y matrix?', answer: 'Y = [[0, -i], [i, 0]] (combined bit and phase flip)' },
+            { topic: 'pauli', question: 'What is the Pauli Z matrix?', answer: 'Z = [[1, 0], [0, -1]] (phase flip operation)' },
+            { topic: 'pauli', question: 'What does the X (bit flip) operation do?', answer: 'X|0⟩ = |1⟩ and X|1⟩ = |0⟩' },
+            { topic: 'pauli', question: 'What does the Z (phase flip) operation do?', answer: 'Z|0⟩ = |0⟩ and Z|1⟩ = -|1⟩' },
+            { topic: 'pauli', question: 'What does the Y operation do?', answer: 'Y|0⟩ = i|1⟩ and Y|1⟩ = -i|0⟩ (bit flip + phase flip)' },
+            { topic: 'pauli', question: 'What is a phase operation?', answer: 'A unitary operation of the form diag(1, e^(iθ)) for real θ' },
+            { topic: 'pauli', question: 'What is the S gate?', answer: 'S = [[1, 0], [0, i]] (phase gate with θ = π/2)' },
+            { topic: 'pauli', question: 'What is the T gate?', answer: 'T = [[1, 0], [0, e^(iπ/4)]] (π/8 gate)' },
+            { topic: 'pauli', question: 'What is the relationship between Pauli matrices?', answer: 'They anticommute: XY = -YX, XZ = -ZX, YZ = -ZY, and each squares to identity' },
+            { topic: 'pauli', question: 'What happens when you apply the same Pauli twice?', answer: 'X² = Y² = Z² = I (identity) - they are self-inverse' },
+
+            // Thinking and Application Questions
+            { topic: 'thinking', question: 'Why can\'t we just record probabilities |αᵢ|² instead of complex amplitudes?', answer: 'Because quantum operations (unitary matrices) act on the complex amplitudes, not the probabilities. Phase relationships between amplitudes affect interference and future operations.' },
+            { topic: 'thinking', question: 'How can you distinguish between |+⟩ and |−⟩ states?', answer: 'Apply Hadamard operation first: H|+⟩ = |0⟩ and H|−⟩ = |1⟩, then measure to get different outcomes with certainty' },
+            { topic: 'thinking', question: 'What\'s the difference between stochastic and unitary matrices?', answer: 'Stochastic: real entries, columns sum to 1, preserve probability vectors<br>Unitary: complex entries, U†U = I, preserve quantum state vectors' },
+            { topic: 'thinking', question: 'What matrices are both stochastic and unitary?', answer: 'Only permutation matrices (matrices with exactly one 1 in each row and column)' },
+            { topic: 'thinking', question: 'If you measure |+⟩ = (1/√2)(|0⟩ + |1⟩), what are the probabilities?', answer: 'P(0) = |(1/√2)|² = 1/2, P(1) = |(1/√2)|² = 1/2' },
+            { topic: 'thinking', question: 'What happens when you apply the same square root of NOT operation twice?', answer: 'You get the NOT operation: if U² = X, then applying U twice gives bit flip' },
+            { topic: 'thinking', question: 'Why is the quantum Fourier transform important?', answer: 'It\'s a key component in quantum algorithms, providing quantum speedup for certain problems' },
+            { topic: 'thinking', question: 'What\'s the relationship between classical and quantum information?', answer: 'Classical information is a special case where quantum states are restricted to standard basis vectors with real coefficients' },
+            { topic: 'thinking', question: 'How do compositions of operations work?', answer: 'Classical: multiply stochastic matrices<br>Quantum: multiply unitary matrices<br>Order matters (non-commutative)' },
+            { topic: 'thinking', question: 'What\'s the physical meaning of complex phases in quantum states?', answer: 'Phases encode quantum interference effects and relationships between different parts of the superposition' },
+            { topic: 'thinking', question: 'Why does entanglement require multiple systems?', answer: 'Single systems cannot be entangled with themselves - entanglement is fundamentally about correlations between separate systems' },
+            { topic: 'thinking', question: 'What makes Bell states special?', answer: 'They are maximally entangled - measuring one qubit gives completely random results, but the outcomes are perfectly correlated' },
+            { topic: 'thinking', question: 'Why can\'t you create entanglement with local operations?', answer: 'Local operations (tensor products) can only create product states - entanglement requires non-local operations or measurements' },
+            { topic: 'thinking', question: 'What is the trade-off between teleportation and superdense coding?', answer: 'Teleportation: 1 qubit → 2 classical bits + 1 e-bit<br>Superdense: 2 classical bits → 1 qubit + 1 e-bit (inverse relationship)' },
+            { topic: 'thinking', question: 'Why do we need complex numbers in quantum mechanics?', answer: 'To encode phase relationships that enable interference, which is essential for quantum speedup and many quantum phenomena' },
+            { topic: 'thinking', question: 'What makes quantum measurements fundamentally different from classical ones?', answer: 'Quantum measurements change the system being measured (wave function collapse), while classical measurements can be non-invasive' }
+        ];
+
+        const topicInfo = {
+            'all': {
+                title: 'All Topics',
+                description: 'Complete collection of quantum information concepts from all chapters'
+            },
+            'single-classical': {
+                title: 'Single Systems: Classical Information',
+                description: 'Classical states, probability vectors, Dirac notation, and deterministic/stochastic operations'
+            },
+            'single-quantum': {
+                title: 'Single Systems: Quantum Information',
+                description: 'Quantum states, qubits, superposition, Born rule, and unitary operations'
+            },
+            'multi-classical': {
+                title: 'Multiple Systems: Classical Information',
+                description: 'Cartesian products, tensor products, independence, and joint measurements'
+            },
+            'multi-quantum': {
+                title: 'Multiple Systems: Quantum Information',
+                description: 'Entanglement, Bell states, GHZ/W states, and controlled operations'
+            },
+            'circuits': {
+                title: 'Quantum Circuits',
+                description: 'Circuit model, gate representations, and quantum computation'
+            },
+            'inner-products': {
+                title: 'Inner Products and Projections',
+                description: 'Inner products, orthogonality, projective measurements, and implementation'
+            },
+            'limitations': {
+                title: 'Limitations on Quantum Information',
+                description: 'Global phases, no-cloning theorem, and distinguishability limits'
+            },
+            'teleportation': {
+                title: 'Quantum Teleportation',
+                description: 'Protocol for transmitting qubits using entanglement and classical communication'
+            },
+            'superdense': {
+                title: 'Superdense Coding',
+                description: 'Protocol for sending 2 classical bits using 1 qubit and shared entanglement'
+            },
+            'chsh': {
+                title: 'CHSH Game',
+                description: 'Nonlocal game demonstrating quantum advantage and Bell\'s theorem'
+            },
+            'pauli': {
+                title: 'Pauli Operations',
+                description: 'Pauli matrices (I, X, Y, Z), phase gates (S, T), and their properties'
+            },
+            'thinking': {
+                title: 'Thinking & Applications',
+                description: 'Conceptual questions testing deeper understanding of quantum information principles'
+            }
+        };
+
+        let currentCards = [...flashcards];
+        let currentIndex = 0;
+        let isFlipped = false;
+        let currentTopic = 'all';
+
+        const flashcard = document.getElementById('flashcard');
+        const question = document.getElementById('question');
+        const answer = document.getElementById('answer');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const flipBtn = document.getElementById('flipBtn');
+        const shuffleBtn = document.getElementById('shuffleBtn');
+        const cardIndicator = document.getElementById('cardIndicator');
+        const progressBar = document.getElementById('progressBar');
+        const progressText = document.getElementById('progressText');
+        const topicBtns = document.querySelectorAll('.topic-btn');
+        const topicTitle = document.getElementById('topicTitle');
+        const topicDescription = document.getElementById('topicDescription');
+        const flashcardContainer = document.getElementById('flashcardContainer');
+
+        function updateCard() {
+            if (currentCards.length === 0) {
+                showEmptyState();
+                return;
+            }
+            
+            hideEmptyState();
+            const card = currentCards[currentIndex];
+            question.innerHTML = card.question;
+            answer.innerHTML = card.answer;
+            
+            // Reset flip state
+            isFlipped = false;
+            flashcard.classList.remove('flipped');
+            
+            // Update indicator
+            cardIndicator.textContent = `Card ${currentIndex + 1} of ${currentCards.length}`;
+            
+            // Update progress
+            const progress = ((currentIndex + 1) / currentCards.length) * 100;
+            progressBar.style.width = `${progress}%`;
+            progressText.textContent = `Progress: ${currentIndex + 1}/${currentCards.length}`;
+        }
+
+        function showEmptyState() {
+            flashcardContainer.innerHTML = '<div class="empty-state">No flashcards available for this topic.</div>';
+            cardIndicator.textContent = 'No cards available';
+            progressBar.style.width = '0%';
+            progressText.textContent = 'No cards to display';
+        }
+
+        function hideEmptyState() {
+            if (flashcardContainer.innerHTML.includes('empty-state')) {
+                flashcardContainer.innerHTML = `
+                    <div class="flashcard" id="flashcard">
+                        <div class="card-face card-front">
+                            <div class="card-content">
+                                <h3 id="question"></h3>
+                            </div>
+                        </div>
+                        <div class="card-face card-back">
+                            <div class="card-content">
+                                <div id="answer"></div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                // Re-get references after recreating elements
+                const newFlashcard = document.getElementById('flashcard');
+                const newQuestion = document.getElementById('question');
+                const newAnswer = document.getElementById('answer');
+                
+                // Update global references
+                window.flashcard = newFlashcard;
+                window.question = newQuestion;
+                window.answer = newAnswer;
+                
+                // Re-add event listener
+                newFlashcard.addEventListener('click', flipCard);
+            }
+        }
+
+        function flipCard() {
+            if (currentCards.length === 0) return;
+            isFlipped = !isFlipped;
+            const activeFlashcard = document.getElementById('flashcard');
+            if (activeFlashcard) {
+                activeFlashcard.classList.toggle('flipped');
+            }
+        }
+
+        function nextCard() {
+            if (currentCards.length === 0) return;
+            currentIndex = (currentIndex + 1) % currentCards.length;
+            updateCard();
+        }
+
+        function prevCard() {
+            if (currentCards.length === 0) return;
+            currentIndex = (currentIndex - 1 + currentCards.length) % currentCards.length;
+            updateCard();
+        }
+
+        function shuffleCards() {
+            if (currentCards.length === 0) return;
+            for (let i = currentCards.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [currentCards[i], currentCards[j]] = [currentCards[j], currentCards[i]];
+            }
+            currentIndex = 0;
+            updateCard();
+        }
+
+        function filterCards(topic) {
+            currentTopic = topic;
+            if (topic === 'all') {
+                currentCards = [...flashcards];
+            } else {
+                currentCards = flashcards.filter(card => card.topic === topic);
+            }
+            currentIndex = 0;
+            updateCard();
+            
+            // Update topic info
+            const info = topicInfo[topic];
+            topicTitle.textContent = info.title;
+            topicDescription.textContent = info.description;
+        }
+
+        // Event listeners
+        flipBtn.addEventListener('click', flipCard);
+        nextBtn.addEventListener('click', nextCard);
+        prevBtn.addEventListener('click', prevCard);
+        shuffleBtn.addEventListener('click', shuffleCards);
+
+        // Topic selection
+        topicBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                topicBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                filterCards(btn.dataset.topic);
+            });
+        });
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (currentCards.length === 0) return;
+            
+            switch(e.key) {
+                case 'ArrowLeft':
+                    prevCard();
+                    break;
+                case 'ArrowRight':
+                    nextCard();
+                    break;
+                case ' ':
+                    e.preventDefault();
+                    flipCard();
+                    break;
+                case 's':
+                case 'S':
+                    shuffleCards();
+                    break;
+            }
+        });
+
+        // Initialize
+        updateCard();
+        
+        // Add click listener to initial flashcard
+        flashcard.addEventListener('click', flipCard);
+    </script>
+</body>
+</html>
